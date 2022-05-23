@@ -1,8 +1,8 @@
-import torch.nn
+import torch.nn as nn
+import torch.functional as F
 
 class DqnSimpleLin(nn.Module):
-    def __init__(self):
-        def __init__(self, inputs, outputs):
+    def __init__(self, inputs, outputs):
         super().__init__()
         self.lin1 = nn.Linear(inputs, 100)
         self.bn1 = nn.BatchNorm2d(16)
