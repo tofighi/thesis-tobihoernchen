@@ -12,6 +12,7 @@ class AgvRoutingFE(BaseFeaturesExtractor):
         self.n_obs_per_agv = observation_space.shape[0] // max_fleetsize
         self.with_transformer = with_transformer
         n_embedded = 32
+        self.n_embedded = n_embedded
         features_dim = (n_embedded + (1 if with_transformer else 0)) * self.n_agv
         super().__init__(observation_space, features_dim)
 
@@ -39,6 +40,7 @@ class AgvRoutingFE(BaseFeaturesExtractor):
         reshaped = th.reshape(
             observations, observations.shape[:-1] + (self.n_agv, self.n_obs_per_agv)
         )
+        self.mask = reshaped[:, :, 0, None].repeat(1, 1, self.n_embedded)
         embedded = self.lin_each_agv(reshaped)
         if self.with_transformer:
             pos_encodings = th.zeros(embedded.shape[:-1] + (1,))

@@ -17,10 +17,16 @@
 			<Id>1655914285255</Id>
 			<Name><![CDATA[Main]]></Name>
 			<ClientAreaTopLeft><X>0</X><Y>0</Y></ClientAreaTopLeft>
-			<StartupCode><![CDATA[init_network();
+			<Import><![CDATA[import com.fasterxml.jackson.databind.ser.std.StdArraySerializers.BooleanArraySerializer;
+import com.anylogic.cloud.util.RandomUtils;]]></Import>
+			<StartupCode><![CDATA[init_pypeline();
+setDefaultRandomGenerator(new Random(16));
+
+init_network();
 for(int i = 0; i<fleetSize; i++)
 	add_agvs();
-init_pypeline();]]></StartupCode>
+	
+traceln(getNetworkContext());]]></StartupCode>
 			<Generic>false</Generic>
 			<GenericParameter>
 				<Id>1655914285253</Id>
@@ -180,6 +186,36 @@ init_pypeline();]]></StartupCode>
 						<Type><![CDATA[double]]></Type>        
 					</Properties>
 				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1659601109346</Id>
+					<Name><![CDATA[seed]]></Name>
+					<X>-460</X><Y>-10</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[1]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1659625806429</Id>
+					<Name><![CDATA[firstRLcall]]></Name>
+					<X>-240</X><Y>550</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[boolean]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[true]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
 				<Variable Class="Parameter">
 					<Id>1656161191956</Id>
 					<Name><![CDATA[runMode]]></Name>
@@ -193,7 +229,7 @@ init_pypeline();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[6]]></Code>
+							<Code><![CDATA[7]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1656161191954</Id>
@@ -217,7 +253,7 @@ init_pypeline();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[6]]></Code>
+							<Code><![CDATA[10]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1656344279462</Id>
@@ -555,7 +591,7 @@ init_pypeline();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[""]]></Code>
+							<Code><![CDATA["../.."]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1657467201668</Id>
@@ -579,7 +615,7 @@ init_pypeline();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[""]]></Code>
+							<Code><![CDATA["minimatrix"]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1657467534127</Id>
@@ -675,7 +711,7 @@ init_pypeline();]]></StartupCode>
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[true]]></Code>
+							<Code><![CDATA[false]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1658128652626</Id>
@@ -704,6 +740,54 @@ init_pypeline();]]></StartupCode>
 						<ParameterEditor>
 							<Id>1658134858950</Id>
 							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+				<Variable Class="Parameter">
+					<Id>1659362027928</Id>
+					<Name><![CDATA[RL_blockTimeout]]></Name>
+					<X>-240</X><Y>380</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[int]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[60]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1659362027926</Id>
+							<EditorContolType>TEXT_BOX</EditorContolType>
+							<MinSliderValue><![CDATA[0]]></MinSliderValue>
+							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
+							<DelimeterType>NO_DELIMETER</DelimeterType>
+						</ParameterEditor>
+					</Properties>                 
+				</Variable>
+				<Variable Class="Parameter">
+					<Id>1659624839755</Id>
+					<Name><![CDATA[RL_obs_includeNodesInReach]]></Name>
+					<X>-240</X><Y>180</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" ModificatorType="STATIC">
+						<Type><![CDATA[boolean]]></Type>
+						<UnitType><![CDATA[NONE]]></UnitType>
+						<SdArray>false</SdArray>
+						<DefaultValue Class="CodeValue">
+							<Code><![CDATA[false]]></Code>
+						</DefaultValue>
+						<ParameterEditor>
+							<Id>1659624839753</Id>
+							<EditorContolType>CHECK_BOX</EditorContolType>
 							<MinSliderValue><![CDATA[0]]></MinSliderValue>
 							<MaxSliderValue><![CDATA[100]]></MaxSliderValue>
 							<DelimeterType>NO_DELIMETER</DelimeterType>
@@ -770,7 +854,33 @@ else
 {
 	py.run("import sys");
 	py.run("sys.path.append('"+RL_pypelinePath+"')");
-	py.run("from thesis.pypeline_connectors."+RL_pypelineName+" import get_action");
+	py.run("from thesis.pypeline_connectors."+RL_pypelineName+" import get_action, get_config");
+	RL_obs_coordinates = py.runResults("get_config('obs_coordinates')").
+		getFeedback(Boolean.class);
+	RL_obs_includeNodesInReach = py.runResults("get_config('obs_includeNodesInReach')").
+		getFeedback(Boolean.class);
+	RL_obsdisp_includeAgvTarget = py.runResults("get_config('obsdisp_includeAgvTarget')").
+		getFeedback(Boolean.class);
+	RL_obsrout_includePartInfo = py.runResults("get_config('obsrout_includePartInfo')").
+		getFeedback(Boolean.class);
+	RL_withCollisions = py.runResults("get_config('withCollisions')").
+		getFeedback(Boolean.class);
+	RL_routingOnNode = py.runResults("get_config('routingOnNode')").
+		getFeedback(Boolean.class);
+	RL_routingInterval = py.runResults("get_config('routinginterval')").
+		getFeedback(Double.class);
+	RL_dispatchingInterval = py.runResults("get_config('dispatchinginterval')").
+		getFeedback(Double.class);
+	station_availability = py.runResults("get_config('station_availability')").
+		getFeedback(Double.class);
+	station_mttr = py.runResults("get_config('station_mttr')").
+		getFeedback(Double.class);
+	station_ioQuote = py.runResults("get_config('station_ioQuote')").
+		getFeedback(Double.class);
+	fleetSize = py.runResults("get_config('fleetsize')").
+		getFeedback(Integer.class);
+	RL_blockTimeout = py.runResults("get_config('blockTimeout')").
+		getFeedback(Integer.class);
 }]]></Body>
 				</Function>
 				<Function AccessType="default" StaticFunction="false">
@@ -784,32 +894,46 @@ else
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
 					<Body><![CDATA[double[][] obs = server.getObservation();
-String obsstr = "[";
-for(int i = 0; i<obs.length; i++)
+String obsstr = toStr(obs);
+String context = "None";
+if(firstRLcall)
 {
-	obsstr += "[";
-	for(int j = 0; j<obs[i].length; j++)
-	{
-		obsstr += obs[i][j] + ",";
-	}
-	obsstr += "],";
+	context = toStr(getNetworkContext());
+	firstRLcall = false;
 }
-obsstr += "]";
-String actstr = py.runResults("get_action(" + obsstr + ")").getFeedback(String.class);
+String actstr = py.runResults(
+	"get_action(" 
+	+ obsstr 
+	+ ",'" 
+	+ server.caller 
+	+ "'," 
+	+ nodeCount
+	+ "," 
+	+ context
+	+ ")").getFeedback(String.class);
+
 
 List<Integer> act = new ArrayList<Integer>();
+int receiver = 0;
+boolean searchReceiver = false;
 for(int i = 0; i<actstr.length(); i++)
 {
 	Character chr = actstr.charAt(i);
-	if(Character.isDigit(chr))
+	if(Character.isDigit(chr) && !searchReceiver)
 	{
 		int in = chr - '0';
 		act.add(in);
 	}
+	if(Character.isDigit(chr) && searchReceiver)
+		receiver =  chr - '0';
+	if(chr == ']')
+		searchReceiver = true;
 }
-server.nextnodes.clear();
-//List<Integer> actions = Arrays.asList(act);
-server.nextnodes.addAll(act);]]></Body>
+
+if(receiver != 1)
+	server.action_agvs(act.toArray(new Integer[0]));
+else if(receiver == 1)
+	server.action_targets(act.toArray(new Integer[0]));]]></Body>
 				</Function>
 				<Function AccessType="default" StaticFunction="false">
 					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
@@ -888,6 +1012,75 @@ for(int i=0; i<nodeCount; i++)
 			maxY = pnode.getY();
 	}
 }]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[double[][]]]></ReturnType>
+					<Id>1659625665194</Id>
+					<Name><![CDATA[getNetworkContext]]></Name>
+					<X>-240</X><Y>530</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Body><![CDATA[INetwork net = getNetworks()[0];
+int n_paths = net.getPathCount();
+int n_nodes = net.getNodeCount();
+int n_nodeObs = node2obs(net.getNode(0)).length;
+
+double[][] context = new double
+	[n_paths + n_nodes]
+	[n_nodeObs * 2];
+	
+for(int i = 0; i<n_paths; i++)
+{
+	IPath p = net.getPath(i);
+	INode s = p.getSource();
+	double[] obss = node2obs(s);
+	for(int j = 0; j<n_nodeObs; j++)
+		context[i][j] = obss[j];
+	INode t = p.getTarget();
+	double[] obst = node2obs(t);
+	for(int j = 0; j<n_nodeObs; j++)
+		context[i][j + n_nodeObs] = obst[j];
+}
+
+for(int i = 0; i<n_nodes; i++)
+{
+	INode n = net.getNode(i);
+	double[] obss = node2obs(n);
+	for(int j = 0; j<n_nodeObs; j++)
+		context[i + n_paths][j] = obss[j];
+}
+
+return context;]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>RETURNS_VALUE</ReturnModificator>
+					<ReturnType><![CDATA[String]]></ReturnType>
+					<Id>1659716736727</Id>
+					<Name><![CDATA[toStr]]></Name>
+					<X>-100</X><Y>430</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[data]]></Name>
+						<Type><![CDATA[double[][]]]></Type>
+					</Parameter>
+					<Body><![CDATA[String str = "[";
+for(int i = 0; i<data.length; i++)
+{
+	str += "[";
+	for(int j = 0; j<data[i].length; j++)
+	{
+		str += data[i][j] + ",";
+	}
+	str += "],";
+}
+str += "]";
+return str;]]></Body>
 				</Function>
 			</Functions>
 			<AgentLinks>
@@ -3906,7 +4099,9 @@ for(int i=0; i<nodeCount; i++)
 			<Id>1655915115251</Id>
 			<Name><![CDATA[Agv]]></Name>
 			<ClientAreaTopLeft><X>0</X><Y>0</Y></ClientAreaTopLeft>
-			<StartupCode><![CDATA[placeOnRandomNode();
+			<StartupCode><![CDATA[color = randomColor();
+roller_deck_agv.setColor("face", color);
+placeOnRandomNode();
 register();]]></StartupCode>
 			<Generic>false</Generic>
 			<GenericParameter>
@@ -4034,7 +4229,7 @@ register();]]></StartupCode>
 				<Variable Class="PlainVariable">
 					<Id>1656865716141</Id>
 					<Name><![CDATA[maxPartObsSize]]></Name>
-					<X>40</X><Y>370</Y>
+					<X>40</X><Y>390</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -4071,6 +4266,21 @@ register();]]></StartupCode>
 					<ShowLabel>true</ShowLabel>
 					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
 						<Type><![CDATA[INode]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[null]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1659361109690</Id>
+					<Name><![CDATA[color]]></Name>
+					<X>40</X><Y>310</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[Color]]></Type>        
 						<InitialValue Class="CodeValue">
 							<Code><![CDATA[null]]></Code>
 						</InitialValue>
@@ -4216,7 +4426,8 @@ register();]]></StartupCode>
 						<Action><![CDATA[moveTo(nextNode);
 lastNode = currentNode;
 if(contents().size() == 1)
-	contents().get(0).moveTo(nextNode);]]></Action>
+	contents().get(0).moveTo(nextNode);
+sendDistanceReward();]]></Action>
 						<Timeout Class="CodeUnitValue">
 							<Code><![CDATA[0.05]]></Code>
 							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
@@ -4253,9 +4464,15 @@ if(contents().size() == 1)
 						<Action><![CDATA[currentNode = nextNode;
 if(currentNode == targetNode)
 {
-	targetNode = null;
-	Object[] message = {"ru", main.RL_reward_reachedTarget};
-	send(message, main.server);
+	//updateTarget(null);
+	/*
+	double remain = main.server.runRLDispatching.getRest();
+	double perc = remain / main.RL_dispatchingInterval;
+	Object[] message1 = {"ru", perc * main.RL_reward_reachedTarget};
+	send(message1, main.server);
+	*/
+	Object[] message2 = {"tr", self};
+	send(message2, main.server);
 }]]></Action>
 						<Timeout Class="CodeUnitValue">
 							<Code><![CDATA[1]]></Code>
@@ -4572,7 +4789,7 @@ send(msg, main.server);]]></Action>
 					</Points>
 					<IconOffset>20.0</IconOffset>
 					<Properties Source="1655919201546" Target="1655919201546" Trigger="timeout">
-						<Action><![CDATA[INode[] possible = nodesInReach();
+						<Action><![CDATA[INode[] possible = nodesInReach(currentNode);
 int n_possible = 0;
 int i_possible = 0;
 for(int i = 0; i<possible.length; i++)
@@ -4592,7 +4809,11 @@ else
 {
 	Object[] message = {"ac", this};
 	send(message,main.server);
-}]]></Action>
+}
+
+
+Object[] message = {"ru", -main.RL_reward_targetDistance / 5};
+send(message, main.server);]]></Action>
 						<Timeout Class="CodeUnitValue">
 							<Code><![CDATA[1]]></Code>
 							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
@@ -4659,8 +4880,8 @@ send(message, main.server);]]></Action>
 					<IconOffset>20.0</IconOffset>
 					<Properties Source="1656071070696" Target="1656057083242" Trigger="timeout">
 						<Timeout Class="CodeUnitValue">
-							<Code><![CDATA[1]]></Code>
-							<Unit Class="TimeUnits"><![CDATA[MINUTE]]></Unit>
+							<Code><![CDATA[main.RL_blockTimeout]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
 						</Timeout>
 						<Condition><![CDATA[true]]></Condition>
 						<Rate Class="CodeUnitValue">
@@ -4690,10 +4911,12 @@ send(message, main.server);]]></Action>
 					</Points>
 					<IconOffset>20.0</IconOffset>
 					<Properties Source="1655919201546" Target="1655919201546" Trigger="message">
-						<Action><![CDATA[INode[] possible = nodesInReach();
+						<Action><![CDATA[INode[] possible = nodesInReach(currentNode);
 if((int)msg[1] > 0)
 {
 	int index = (int)msg[1]-1;
+	traceln((int)msg[1]);
+	traceln(getObservation("Routing"));
 	if(possible.length > (index))
 		if(possible[index] != null)
 			drive(possible[index]);
@@ -4779,7 +5002,7 @@ if((int)msg[1] > 0)
 				<Event>
 					<Id>1658135027409</Id>
 					<Name><![CDATA[distanceReward]]></Name>
-					<X>40</X><Y>410</Y>
+					<X>40</X><Y>430</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -4805,7 +5028,7 @@ if((int)msg[1] > 0)
 						</RecurrenceCode>
 						<Condition><![CDATA[false]]></Condition>
 					</Properties>
-					<Action><![CDATA[sendDistanceReward();]]></Action>
+					<Action><![CDATA[// sendDistanceReward();]]></Action>
 				</Event>
 			</Events>
 			<Functions>
@@ -4864,12 +5087,10 @@ for(Integer i = 0; i<n_nodes; i++)
 	node_indices[i] = i;
 	
 List<Integer> shuffleList = Arrays.asList(node_indices);
-Collections.shuffle(shuffleList);
-shuffleList.toArray(node_indices);
 
 for(int i = 0; i<n_nodes; i++)
 {
-	Integer index = node_indices[i];
+	Integer index = randomFrom(node_indices);
 	INode mynode = net.getNode(index);
 	if(PointNode.class.isInstance(mynode))
 	{
@@ -4923,19 +5144,23 @@ for(int i = 0; i<n_nodes; i++)
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
-					<Body><![CDATA[int n_connections = currentNode.getConnectionsCount();
+					<Parameter>
+						<Name><![CDATA[node]]></Name>
+						<Type><![CDATA[INode]]></Type>
+					</Parameter>
+					<Body><![CDATA[int n_connections = node.getConnectionsCount();
 List<Object[]> nodeAnglePairs = new ArrayList<Object[]>();
 
 for(int i = 0; i<n_connections; i++)
 {
-	INode start = currentNode;
+	INode start = node;
 	IPath path = start.getConnection(i);
 	INode end = path.getOtherNode(start);
 	if(end != lastNode)
 	{
 		double angle = angle(start, end);
 		Object[] nodeAnglePair = {
-			path.getOtherNode(currentNode), 
+			path.getOtherNode(node), 
 			angle
 		};
 		
@@ -4965,7 +5190,7 @@ return possible;]]></Body>
 					<ReturnType><![CDATA[double[]]]></ReturnType>
 					<Id>1656340504539</Id>
 					<Name><![CDATA[getObservation]]></Name>
-					<X>40</X><Y>330</Y>
+					<X>40</X><Y>350</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -4974,7 +5199,14 @@ return possible;]]></Body>
 						<Name><![CDATA[caller]]></Name>
 						<Type><![CDATA[String]]></Type>
 					</Parameter>
-					<Body><![CDATA[boolean include_part = main.runMode < 4 
+					<Body><![CDATA[if(currentNode==targetNode)
+{
+	Object[] message = {"ru", main.RL_reward_reachedTarget};
+	deliver(message, main.server);
+}
+
+
+boolean include_part = main.runMode < 4 
 	|| caller == "Dispatching" 
 	|| main.RL_obsrout_includePartInfo;
 boolean include_target = main.runMode < 4 
@@ -4991,6 +5223,8 @@ if(include_part)
 	obs_len += maxPartObsSize;
 if(include_target)
 	obs_len += nObsNode;
+if(main.RL_obs_includeNodesInReach)
+	obs_len += 4*nObsNode;
 	
 double obs[] = new double[obs_len];
 obs[0] = active;
@@ -5006,10 +5240,24 @@ if(include_target)
 	double[] targetNode_obs = main.node2obs(targetNode);
 	for(int i = 0; i<nObsNode; i++)
 		obs[obs_hwm + i] = targetNode_obs[i];
-	obs_hwm = 1 + 3 * nObsNode;
+	obs_hwm += nObsNode;
 		
 }
 
+
+if(main.RL_obs_includeNodesInReach)
+{
+	INode[] nir = {null, null, null, null};
+	if(nextNode != null)
+		nir = nodesInReach(nextNode);
+	for(int i = 0; i < 4; i++)
+	{
+		double[] node_obs = main.node2obs(nir[i]);
+		for(int j = 0; j<nObsNode; j++)
+			obs[obs_hwm + j] = node_obs[j];
+		obs_hwm += nObsNode;
+	}
+}
 
 if(contents().size() == 1 && include_part)
 {
@@ -5018,6 +5266,7 @@ if(contents().size() == 1 && include_part)
 	for(int i = 0; i<partobs.length; i++)
 		obs[i + obs_hwm] = partobs[i];
 }
+
 return obs;
 ]]></Body>
 				</Function>
@@ -5026,7 +5275,7 @@ return obs;
 					<ReturnType><![CDATA[double]]></ReturnType>
 					<Id>1656341531671</Id>
 					<Name><![CDATA[register]]></Name>
-					<X>40</X><Y>350</Y>
+					<X>40</X><Y>370</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -5063,7 +5312,7 @@ return atan2fast(dx, dy);]]></Body>
 					<ReturnType><![CDATA[double]]></ReturnType>
 					<Id>1658135052612</Id>
 					<Name><![CDATA[sendDistanceReward]]></Name>
-					<X>40</X><Y>430</Y>
+					<X>40</X><Y>450</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -5081,11 +5330,37 @@ return atan2fast(dx, dy);]]></Body>
 	PointNode nnode = (PointNode) nextNode;
 	double distanceLast = lnode.getXYZ().distance(tnode.getXYZ());
 	double distanceNext = nnode.getXYZ().distance(tnode.getXYZ());
-	double fact = distanceLast > distanceNext ? 1 : -1; 
+	double fact = distanceLast >= distanceNext ? 
+	(distanceLast == distanceNext ? 0 : 1) : -0.1; 
 
 	Object[] message = {"ru", fact * main.RL_reward_targetDistance};
 	send(message, main.server);
-}	]]></Body>
+}	
+else{
+	Object[] message = {"ru", -main.RL_reward_targetDistance};
+	send(message, main.server);
+}
+]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1659360910396</Id>
+					<Name><![CDATA[updateTarget]]></Name>
+					<X>40</X><Y>330</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[tNode]]></Name>
+						<Type><![CDATA[INode]]></Type>
+					</Parameter>
+					<Body><![CDATA[if(targetNode != null)
+	targetNode.setLineColor(dodgerBlue);
+targetNode = tNode;
+if(targetNode != null)
+	targetNode.setLineColor(color);]]></Body>
 				</Function>
 			</Functions>
 			<AgentLinks>
@@ -5394,6 +5669,21 @@ return atan2fast(dx, dy);]]></Body>
 						</InitialValue>
 					</Properties>
 				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1659615598214</Id>
+					<Name><![CDATA[targetsReached]]></Name>
+					<X>380</X><Y>220</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
 				<Variable Class="CollectionVariable">
 					<Id>1656064955089</Id>
 					<Name><![CDATA[agvBlocks]]></Name>
@@ -5657,6 +5947,39 @@ if(obs_size_routing<(int)msg[2])
 						<SatisfiesExpression><![CDATA[((String)msg[0]) == "sr"]]></SatisfiesExpression>
 					</Properties>	
 				</StatechartElement>
+				<StatechartElement Class="Transition" ParentState="ROOT_NODE">
+					<Id>1659615649319</Id>
+					<Name><![CDATA[updateTargetReached]]></Name>
+					<X>150</X><Y>220</Y>
+					<Label><X>95</X><Y>5</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Points>
+						<Point><X>0</X><Y>0</Y></Point>
+						<Point><X>80</X><Y>0</Y></Point>
+						<Point><X>80</X><Y>10</Y></Point>
+						<Point><X>0</X><Y>10</Y></Point>
+					</Points>
+					<IconOffset>20.0</IconOffset>
+					<Properties Source="1656063884957" Target="1656063884957" Trigger="message">
+						<Action><![CDATA[targetsReached += 1;]]></Action>
+						<Timeout Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="TimeUnits"><![CDATA[SECOND]]></Unit>
+						</Timeout>
+						<Condition><![CDATA[true]]></Condition>
+						<Rate Class="CodeUnitValue">
+							<Code><![CDATA[1]]></Code>
+							<Unit Class="RateUnits"><![CDATA[PER_SECOND]]></Unit>
+						</Rate>
+						<MessageType><![CDATA[Object[]]]></MessageType>
+						<DefaultTransition>true</DefaultTransition>
+						<FilterType><![CDATA[satisfies]]></FilterType>
+						<EqualsExpression><![CDATA["text"]]></EqualsExpression>
+						<SatisfiesExpression><![CDATA[((String)msg[0]) == "tr"]]></SatisfiesExpression>
+					</Properties>	
+				</StatechartElement>
 			</StatechartElements>
 			<Events>
 				<Event>
@@ -5887,7 +6210,7 @@ while(toInspect.size()>0){
 	0};
 if(main.runMode == 0)
 {
-	Random rand = new Random();
+	Random rand = getDefaultRandomGenerator();
 	message[1] = rand.nextInt(5);
 	send(message, agv);
 	return;
@@ -5971,7 +6294,7 @@ nextnodes.addAll(nextnodes_list);]]></Body>
 for(int i = 0; i<main.agvs.size(); i++)
 {
 	Agv agv = main.agvs.get(i);
-	agv.targetNode = net.getNode(targets[i]);
+	agv.updateTarget(net.getNode(targets[i]));
 }]]></Body>
 				</Function>
 				<Function AccessType="default" StaticFunction="false">
@@ -7966,7 +8289,7 @@ return observation;]]></Body>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
 					<ShowLabel>true</ShowLabel>
-					<Body><![CDATA[Random rand = new Random();
+					<Body><![CDATA[Random rand = getDefaultRandomGenerator();
 double value = rand.nextDouble();
 for(int i = 0; i<partVariantsPropabilities.size(); i++)
 	if((Double)partVariantsPropabilities.get(i)[1]>value)
@@ -8552,6 +8875,12 @@ send(msg, main.server);]]></Body>
 				<Parameter>
 					<ParameterName><![CDATA[RL_reward_targetDistance]]></ParameterName>
 				</Parameter>
+				<Parameter>
+					<ParameterName><![CDATA[RL_blockTimeout]]></ParameterName>
+				</Parameter>
+				<Parameter>
+					<ParameterName><![CDATA[RL_obs_includeNodesInReach]]></ParameterName>
+				</Parameter>
 			</Parameters>			
 			<PresentationProperties>
 				<EnableZoomAndPanning>true</EnableZoomAndPanning>
@@ -8576,7 +8905,7 @@ send(msg, main.server);]]></Body>
 			<Name><![CDATA[RLExperiment]]></Name>
 			<MaximumMemory>512</MaximumMemory>
 			<RandomNumberGenerationType>fixedSeed</RandomNumberGenerationType>
-			<CustomGeneratorCode>new Random()</CustomGeneratorCode>
+			<CustomGeneratorCode>new Random() </CustomGeneratorCode>
 			<SeedValue>1</SeedValue>
 			<ModelTimeProperties>
 				<StopOption><![CDATA[Never]]></StopOption>
@@ -8594,21 +8923,40 @@ send(msg, main.server);]]></Body>
 				<Type><![CDATA[double]]></Type>
 			</ObservationField>
 			<ObservationField>
+				<Name><![CDATA[caller]]></Name>
+				<Type><![CDATA[String]]></Type>
+			</ObservationField>
+			<ObservationField>
+				<Name><![CDATA[targetsReached]]></Name>
+				<Type><![CDATA[int]]></Type>
+			</ObservationField>
+			<ObservationField>
 				<Name><![CDATA[n_nodes]]></Name>
 				<Type><![CDATA[int]]></Type>
 			</ObservationField>
 			<ObservationField>
-				<Name><![CDATA[caller]]></Name>
-				<Type><![CDATA[String]]></Type>
+				<Name><![CDATA[networkcontext]]></Name>
+				<Type><![CDATA[double[][]]]></Type>
 			</ObservationField>
 			<ObservationCode><![CDATA[obs = root.server.getObservation();
 rew = root.server.reward;
-caller = root.server.caller;
-n_nodes = root.nodeCount;
 if(root.runMode < 4 || (root.runMode == 4 && caller != "Dispatching"))
 root.server.reward = 0.0;
-else if(root.runMode == 5 && caller != "Routing")
-root.server.reward = 0.0;]]></ObservationCode>
+else if(root.runMode == 5 && caller == "Dispatching")
+root.server.reward = 0.0;
+caller = root.server.caller;
+
+n_nodes = root.nodeCount;
+targetsReached = root.server.targetsReached;
+root.server.targetsReached = 0;
+
+if(root.firstRLcall)
+{
+	networkcontext = root.getNetworkContext();
+	root.firstRLcall = false;
+}
+else
+	networkcontext = null;]]></ObservationCode>
 			<StopCondition><![CDATA[false]]></StopCondition>
 			<ActionField>
 				<Name><![CDATA[receiver]]></Name>
@@ -8675,6 +9023,10 @@ else if(receiver == 1)
 				<Type><![CDATA[double]]></Type>
 			</ConfigurationField>
 			<ConfigurationField>
+				<Name><![CDATA[obs_includeNodesInReach]]></Name>
+				<Type><![CDATA[boolean]]></Type>
+			</ConfigurationField>
+			<ConfigurationField>
 				<Name><![CDATA[obs_coordinates]]></Name>
 				<Type><![CDATA[boolean]]></Type>
 			</ConfigurationField>
@@ -8710,6 +9062,14 @@ else if(receiver == 1)
 				<Name><![CDATA[routingOnNode]]></Name>
 				<Type><![CDATA[boolean]]></Type>
 			</ConfigurationField>
+			<ConfigurationField>
+				<Name><![CDATA[blockTimeout]]></Name>
+				<Type><![CDATA[int]]></Type>
+			</ConfigurationField>
+			<ConfigurationField>
+				<Name><![CDATA[seed]]></Name>
+				<Type><![CDATA[int]]></Type>
+			</ConfigurationField>
 			<ConfigurationCode><![CDATA[root.runMode = runmode;
 root.fleetSize = fleetsize;
 root.station_availability = station_availability;
@@ -8723,6 +9083,7 @@ root.RL_reward_removedForBlock = reward_removedForBlock;
 root.RL_reward_respotOperation = reward_respotOperation;
 root.RL_reward_reworkOperation = reward_reworkOperation;
 root.RL_reward_targetDistance = reward_targetDistance;
+root.RL_obs_includeNodesInReach = obs_includeNodesInReach;
 root.RL_obs_coordinates = obs_coordinates;
 root.RL_obsrout_includePartInfo = obsrout_includePartInfo;
 root.RL_obsdisp_includeAgvTarget = obsdisp_includeAgvTarget;
@@ -8731,7 +9092,9 @@ root.RL_pypelineName = pypelineName;
 root.RL_routingInterval = routinginterval;
 root.RL_dispatchingInterval = dispatchinginterval;
 root.RL_routingOnNode = routingOnNode;
-root.RL_withCollisions = withCollisions;]]></ConfigurationCode>
+root.RL_withCollisions = withCollisions;
+root.RL_blockTimeout = blockTimeout;
+root.seed = seed;]]></ConfigurationCode>
 		</ReinforcementLearningExperiment>
 	</Experiments>
 	<ModelResources>
