@@ -1,18 +1,18 @@
 from stable_baselines3 import PPO
 import json
-from ..envs.matrix_routing import MiniMatrix
+from ..envs.matrix_routing_centralized import MatrixRouting
 from ..envs.build_config import build_config
 from alpyne.data.spaces import Observation, Action
 
-model_path = "../../models/MiniMatrix_Routing_Attn/PPO-1-1-06_08-17_30_09-42-250000.zip"
-hparams_path = "../../models/MiniMatrix_Routing_Attn/PPO-1-1-06_08-17_30_09-42.json"
+model_path = "../../models/MiniMatrix_Routing_Attn/PPO-1-1-06_08-22_20_05-42-150000.zip"
+hparams_path = "../../models/MiniMatrix_Routing_Attn/PPO-1-1-06_08-22_20_05-42.json"
 
 
 model = PPO.load(model_path)
 with open(hparams_path) as json_file:
     hparams = json.load(json_file)
 config = build_config(hparams["env_args"], hparams["fleetsize"])
-env = MiniMatrix(
+env = MatrixRouting(
     fleetsize=hparams["fleetsize"],
     max_fleetsize=hparams["max_fleetsize"],
     config_args=hparams["env_args"],

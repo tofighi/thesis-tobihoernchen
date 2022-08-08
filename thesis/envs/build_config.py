@@ -42,6 +42,9 @@ def build_config(config_args: dict, fleetsize: int, seed: int = 1) -> Configurat
             if not "reward_distance" in config_args
             else config_args["reward_distance"]
         ),
+        reward_separateAgv = False
+        if not "reward_separateAgv" in config_args
+        else config_args["reward_separateAgv"],
         obs_includeNodesInReach=False
         if not "includeNodesInReach" in config_args
         else config_args["includeNodesInReach"],
