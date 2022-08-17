@@ -7,11 +7,13 @@ import torch
 import random
 from .randdispatcher import RandDispatcher
 import re
-from .build_config import build_config
+from ..utils.build_config import build_config
 
 
 class MatrixRoutingCentral(BaseAlpyneEnv):
     """
+    One Agent for all Routing with Multidiscrete Action Space
+
     model_path: If supposed to build its own client
     client: If client is given
     max_fleetsize: if None, no shuffling is done, observations are taken as they are.
@@ -33,6 +35,7 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
         config_args: dict = dict(),
         dispatcher=None,
         counter=None,
+        do_shuffle=True,
         verbose: bool = False,
     ):
         self.fleetsize = fleetsize
@@ -41,8 +44,10 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
         self.max_seconds = max_seconds
         self.config_args = config_args
         self.stepcounter = 0
+        self.do_shuffle = do_shuffle
         self.context = None  # used to catch special network context info which is send on the first step
-
+        self.verbose = verbose
+        self.timelimit_truncated = False
         if max_fleetsize is not None:
             self.shuffle()
 
@@ -63,7 +68,7 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
                 self.client = AlpyneClient(model_path, port=port, verbose=verbose)
             else:
                 self.client = client
-            config_args.update(reward_separateAgv=False)
+            # config_args.update(reward_separateAgv=False)
             self.config = build_config(config_args, fleetsize, port)
             self.run = self.client.create_reinforcement_learning(self.config)
             super().__init__(self.run)
@@ -75,7 +80,7 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
         )
 
     def reset(self) -> "BaseAlpyneEnv.PyObservationType":
-        if self.max_fleetsize is not None:
+        if self.max_fleetsize is not None and self.do_shuffle:
             self.shuffle()
         self.stepcounter = 0
         self.config.seed = random.randint(0, 1000)
@@ -91,25 +96,37 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
         self, action: "BaseAlpyneEnv.PyActionType"
     ) -> Tuple["BaseAlpyneEnv.PyObservationType", float, bool, Optional[dict]]:
         self.stepcounter += 1
-
-        if self.stepcounter % 100 == 0 and self.max_fleetsize is not None:
+        if (
+            self.stepcounter % 100 == 0
+            and self.max_fleetsize is not None
+            and self.do_shuffle
+        ):
             self.shuffle()
 
         alpyne_action = self._convert_to_action(action)
         self.sim.take_action(alpyne_action)
-
         self.sim.wait_for_completion()
 
-        alpyne_obs = self._catch_dispatcher(self._catch_no_action(self.sim.get_observation()))
+        alpyne_obs = self._catch_no_action(
+            self._catch_dispatcher(self.sim.get_observation())
+        )
         obs = self._convert_from_observation(alpyne_obs)
         reward = self._calc_reward(alpyne_obs)
         done = self.sim.is_terminal() or self._terminal_alternative(alpyne_obs)
-        info = (
-            dict(targetsReached=alpyne_obs.targetsReached)
-            if "targetsReached" in alpyne_obs.names()
-            else self.sim.last_state[1]
-        )  # dictionary of info
 
+        info = dict()
+        if done:
+            info.update({"TimeLimit.truncated": self.timelimit_truncated})
+            if "targetsReached" in alpyne_obs.names():
+                info.update(targetsReached=alpyne_obs.targetsReached)
+
+            if "blocks" in alpyne_obs.names():
+                info.update(targetsReached=alpyne_obs.blocks)
+
+        if self.verbose:
+            print(f"MRC_obs{obs}")
+            print(f"MRC_rew{reward}")
+            print(f"MRC_dne{done}")
         return obs, reward, done, info
 
     def _catch_context(self, alpyne_obs: Observation) -> Observation:
@@ -123,8 +140,10 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
 
     def _catch_no_action(self, alpyne_obs: Observation):
         agvs_awaiting = [o[1] for o in alpyne_obs.obs]
-        if not any(agvs_awaiting):
-            actions = [0]*len(alpyne_obs.obs)
+        while not any(agvs_awaiting):
+            if self.verbose:
+                print("Skipped one cycle because no AGV needs a Decision")
+            actions = [0] * len(alpyne_obs.obs)
             action = Action(
                 data=[
                     {
@@ -136,20 +155,22 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
                     {
                         "name": "receiver",
                         "type": "INTEGER",
-                        "value": 1,
+                        "value": -1,
                         "unit": None,
                     },
                 ]
             )
             self.sim.take_action(action)
             self.sim.wait_for_completion()
-            alpyne_obs = self.sim.get_observation()
+            alpyne_obs = self._catch_dispatcher(self.sim.get_observation())
+            agvs_awaiting = [o[1] for o in alpyne_obs.obs]
         return alpyne_obs
-
 
     def _catch_dispatcher(self, alpyne_obs: Observation) -> Observation:
         while alpyne_obs.caller == "Dispatching":
             action = self.dispatcher(alpyne_obs)
+            if self.verbose:
+                print(f"Dispatcher: {action}")
             self.sim.take_action(action)
             self.sim.wait_for_completion()
             alpyne_obs = self.sim.get_observation()
@@ -202,6 +223,8 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
     def _convert_to_action(self, action: "BaseAlpyneEnv.PyActionType") -> Action:
         """Convert the action sent as part of the Gym interface to an Alpyne Action object"""
         action = self._modify_action(action)
+        if self.verbose:
+            print(f"MRC_action{action}")
         return Action(
             data=[
                 {
@@ -213,7 +236,7 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
                 {
                     "name": "receiver",
                     "type": "INTEGER",
-                    "value": 0,
+                    "value": -1,
                     "unit": None,
                 },
             ]
@@ -228,7 +251,9 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
 
     def _calc_reward(self, observation: Observation) -> float:
         """Evaluate the performance of the last action based on the current observation"""
-        return observation.rew[0]  # if self.stepcounter != self.max_steps else -10
+        if len(observation.rew) == 1:
+            return observation.rew[0]  # if self.stepcounter != self.max_steps else -10
+        return observation.rew
 
     def _terminal_alternative(self, observation: Observation) -> bool:
         """Optional method to add *extra* terminating conditions"""
@@ -237,7 +262,10 @@ class MatrixRoutingCentral(BaseAlpyneEnv):
             if self.max_steps is not None
             else False
         )
-        time = 0
-        if self.max_seconds is not None:
-            time = self.run.get_state()[1]["model_time"]
-        return terminal_max_steps or time > self.max_seconds
+        time = 0 if self.max_seconds is None else self.run.get_state()[1]["model_time"]
+        terminal_max_seconds = (
+            time >= self.max_seconds if self.max_seconds is not None else False
+        )
+        if terminal_max_steps or terminal_max_seconds:
+            self.timelimit_truncated = True
+        return terminal_max_steps or terminal_max_seconds

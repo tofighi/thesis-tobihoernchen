@@ -711,7 +711,7 @@ for(int i = 0; i<fleetSize; i++)
 						<UnitType><![CDATA[NONE]]></UnitType>
 						<SdArray>false</SdArray>
 						<DefaultValue Class="CodeValue">
-							<Code><![CDATA[false]]></Code>
+							<Code><![CDATA[true]]></Code>
 						</DefaultValue>
 						<ParameterEditor>
 							<Id>1658128652626</Id>
@@ -5221,7 +5221,7 @@ return possible;]]></Body>
 					</Parameter>
 					<Body><![CDATA[if(currentNode==targetNode)
 {
-	Object[] message = {"ru", main.RL_reward_targetDistance, this};
+	Object[] message = {"ru", main.RL_reward_reachedTarget, this};
 	deliver(message, main.server);
 }
 
@@ -5230,7 +5230,7 @@ boolean include_part = main.runMode < 4
 	|| caller == "Dispatching" 
 	|| main.RL_obsrout_includePartInfo;
 boolean include_target = main.runMode < 4 
-	|| caller == "Routing" 
+	|| caller != "Dispatching" 
 	|| main.RL_obsdisp_includeAgvTarget;
 	
 
@@ -5741,6 +5741,21 @@ send(message2, main.server);
 					<Id>1659965823587</Id>
 					<Name><![CDATA[blocks]]></Name>
 					<X>380</X><Y>250</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Properties SaveInSnapshot="true" Constant="false" AccessType="public" StaticVariable="false">
+						<Type><![CDATA[int]]></Type>        
+						<InitialValue Class="CodeValue">
+							<Code><![CDATA[0]]></Code>
+						</InitialValue>
+					</Properties>
+				</Variable>
+				<Variable Class="PlainVariable">
+					<Id>1659970712115</Id>
+					<Name><![CDATA[caller_i]]></Name>
+					<X>300</X><Y>450</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -6350,17 +6365,23 @@ if(main.runMode == 0)
 }
 else if(main.runMode == 4 && main.RL_routingOnNode)
 {
-	caller = agv.toString();
+	int i = getAgvIndex(agv);
+	caller_i = i;
+	caller = Integer.toString(i);
 	RLExperiment.takeAction(this);
 }
 else if(main.runMode == 6 && main.RL_routingOnNode)
 {
-	caller = agv.toString();
+	int i = getAgvIndex(agv);
+	caller_i = i;
+	caller = Integer.toString(i);
 	main.take_action_debug();
 }
 else if((main.runMode == 5 || main.runMode == 7) && main.RL_routingOnNode)
 {
-	caller = agv.toString();
+	int i = getAgvIndex(agv);
+	caller_i = i;
+	caller = Integer.toString(i);
 	main.take_action_pypeline();
 }
 
@@ -6393,7 +6414,7 @@ return getObservationRouting();
 					<ReturnType><![CDATA[double]]></ReturnType>
 					<Id>1657315848043</Id>
 					<Name><![CDATA[action_agvs]]></Name>
-					<X>630</X><Y>370</Y>
+					<X>630</X><Y>390</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -6411,7 +6432,7 @@ nextnodes.addAll(nextnodes_list);]]></Body>
 					<ReturnType><![CDATA[double]]></ReturnType>
 					<Id>1657316067696</Id>
 					<Name><![CDATA[action_targets]]></Name>
-					<X>630</X><Y>390</Y>
+					<X>630</X><Y>410</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -6542,7 +6563,7 @@ return i;]]></Body>
 					<ReturnType><![CDATA[double[]]]></ReturnType>
 					<Id>1659961376911</Id>
 					<Name><![CDATA[getReward]]></Name>
-					<X>630</X><Y>410</Y>
+					<X>630</X><Y>430</Y>
 					<Label><X>10</X><Y>0</Y></Label>
 					<PublicFlag>false</PublicFlag>
 					<PresentationFlag>true</PresentationFlag>
@@ -6558,23 +6579,52 @@ return i;]]></Body>
 }
 else
 {
-	double rew[] = new double[agvRewards.size()];
-	for(int i = 0; i<agvRewards.size(); i++)
-		rew[i] = agvRewards.get(i);
-	if(main.runMode < 4 || (main.runMode == 4 && caller != "Dispatching"))
-	{ 
-		agvRewards.clear();
-		for(double d : rew)
-			agvRewards.add(0.0);
+	if(!main.RL_routingOnNode)
+	{
+		double rew[] = new double[agvRewards.size()];
+		for(int i = 0; i<agvRewards.size(); i++)
+			rew[i] = agvRewards.get(i);
+		if(main.runMode < 4 || (main.runMode == 4 && caller != "Dispatching"))
+		{ 
+			agvRewards.clear();
+			for(double d : rew)
+				agvRewards.add(0.0);
+		}
+		else if(main.runMode == 5 && caller == "Dispatching")
+		{ 
+			agvRewards.clear();
+			for(double d : rew)
+				agvRewards.add(0.0);
+		}
+		return rew;
 	}
-	else if(main.runMode == 5 && caller == "Dispatching")
-	{ 
-		agvRewards.clear();
-		for(double d : rew)
-			agvRewards.add(0.0);
+	else
+	{
+		double[] rew = {agvRewards.get(caller_i)};
+		agvRewards.set(caller_i, 0.0);
+		return rew;
 	}
-	return rew;
 }]]></Body>
+				</Function>
+				<Function AccessType="default" StaticFunction="false">
+					<ReturnModificator>VOID</ReturnModificator>
+					<ReturnType><![CDATA[double]]></ReturnType>
+					<Id>1659968952230</Id>
+					<Name><![CDATA[action_agv]]></Name>
+					<X>630</X><Y>370</Y>
+					<Label><X>10</X><Y>0</Y></Label>
+					<PublicFlag>false</PublicFlag>
+					<PresentationFlag>true</PresentationFlag>
+					<ShowLabel>true</ShowLabel>
+					<Parameter>
+						<Name><![CDATA[node]]></Name>
+						<Type><![CDATA[int]]></Type>
+					</Parameter>
+					<Parameter>
+						<Name><![CDATA[i_agv]]></Name>
+						<Type><![CDATA[int]]></Type>
+					</Parameter>
+					<Body><![CDATA[nextnodes.set(i_agv, node);]]></Body>
 				</Function>
 			</Functions>
 			<AgentLinks>
@@ -9158,10 +9208,12 @@ else
 				<Name><![CDATA[actions]]></Name>
 				<Type><![CDATA[Integer[]]]></Type>
 			</ActionField>
-			<ActionCode><![CDATA[if(receiver != 1)
+			<ActionCode><![CDATA[if(receiver == -1)
 	root.server.action_agvs(actions);
-else if(receiver == 1)
-	root.server.action_targets(actions);]]></ActionCode>
+else if(receiver == -2)
+	root.server.action_targets(actions);
+else
+	root.server.action_agv(actions[0], receiver);]]></ActionCode>
 			<ConfigurationField>
 				<Name><![CDATA[runmode]]></Name>
 				<Type><![CDATA[int]]></Type>
