@@ -1,7 +1,7 @@
 from stable_baselines3 import PPO
 import json
 from ..envs.matrix_routing_centralized import MatrixRouting
-from ..envs.build_config import build_config
+from ..utils.build_config import build_config
 from alpyne.data.spaces import Observation, Action
 
 model_path = "../../models/MiniMatrix_Routing_Attn/PPO-1-1-06_08-22_20_05-42-150000.zip"

@@ -64,12 +64,12 @@ class RandDispatcher:
             and len(obs.networkcontext) > 0
         ):
             self.get_context(obs.networkcontext)
-        if self.context is None:
+        if self.context is None or self.distance is None:
             action_max = obs.n_nodes - 1
             actions = [random.randint(0, action_max) for _ in obs.obs]
         else:
-            lasts = [i[1:3] for i in obs.obs]
-            nexts = [i[3:5] for i in obs.obs]
+            lasts = [i[2:4] for i in obs.obs]
+            nexts = [i[4:6] for i in obs.obs]
             actions = [self.getNode(l, n) for l, n in zip(lasts, nexts)]
         return Action(
             data=[
@@ -82,7 +82,7 @@ class RandDispatcher:
                 {
                     "name": "receiver",
                     "type": "INTEGER",
-                    "value": 1,
+                    "value": -2,
                     "unit": None,
                 },
             ]
